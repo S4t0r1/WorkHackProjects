@@ -1,11 +1,11 @@
-
 import sys
+from itertools import permutations
 
 
 def getInputs(all_data=None):
     inType, inData = None, None
     all_ins = [] if not all_data else all_data
-    print("{}'b' = step back, press ENTER to cancel".format('\n'*2))
+    print("{}'b' = step back\npress ENTER to cancel".format('\n'*2))
     while True:
         if inType not in {'ma', 'fa'}:
             inType = input('\n'+"INPUT"+'\n'+"manually(m/all=ma)"+'\n'+"    file(f/all=fa): ")
@@ -17,7 +17,9 @@ def getInputs(all_data=None):
         inData = input("Paste dataset: ") if inType in {'m', 'ma'} else input("Fname: ")
         if len(inData) == 0:
             break
-        if 'b' in inData+inType:
+        if 'b' in inData + inType:
+            if 'bb' in inData + inType:
+                all_ins.pop()
             return getInputs(all_data=all_ins)
         else:
             if inType in {'f', 'fa'}:
