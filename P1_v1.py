@@ -14,7 +14,7 @@ def getInputs(all_data=None, dataType=None, msg=''):
                 break
             if inType not in {'m', 'ma', 'f', 'fa', 'b', 'd'*len(inType)}:
                 return getInputs(all_ins)
-        if 'd' not in inType:
+        if 'd'*len(inType) not in inType:
             inData = input("Paste dataset: ") if inType in {'m', 'ma'} else input("Fname: ")
             if len(inData) == 0:
                 break
@@ -29,7 +29,7 @@ def getInputs(all_data=None, dataType=None, msg=''):
         if inType in {'f', 'fa'}:
             with open(inData, 'r', encoding='utf8') as fi:
                 inData = fi.readlines() if input("Table(t)?: ") == 't' else fi.read()
-        all_ins.append(inData)
+        process = all_ins.append(inData) if (inType and inData) != 'da' else all_ins.clear()
     if len(all_ins) == 0:
         process = getInputs() if input("No data, RE?: ").lower() == "y" else sys.exit()
     return all_ins
