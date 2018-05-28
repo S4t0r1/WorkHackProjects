@@ -1,31 +1,35 @@
+
 import sys
 from itertools import permutations
 
 
-def getInputs(all_data=None):
-    inType, inData = None, None
+def getInputs(all_data=None, dataType=None, msg=''):
+    inType, inData = dataType, None
     all_ins = [] if not all_data else all_data
-    print("{}'b' = step back\npress ENTER to cancel".format('\n'*2))
+    print("\n\n{} \nb = step back \nd*N = delete \npress ENTER to cancel".format(msg))
     while True:
         if inType not in {'ma', 'fa'}:
             inType = input('\n'+"INPUT"+'\n'+"manually(m/all=ma)"+'\n'+"    file(f/all=fa): ")
-            if len(inType) > 0:
-                if inType not in {'m', 'ma', 'f', 'fa'}:
-                    return getInputs(all_data=all_ins)
-            else:
+            if len(inType) == 0:
                 break
+            if inType not in "mmaffabd":
+                return getInputs(all_ins)
         inData = input("Paste dataset: ") if inType in {'m', 'ma'} else input("Fname: ")
         if len(inData) == 0:
             break
-        if 'b' in inData + inType:
-            if 'bb' in inData + inType:
-                all_ins.pop()
-            return getInputs(all_data=all_ins)
-        else:
-            if inType in {'f', 'fa'}:
-                with open(inData, 'r', encoding='utf8') as fi:
-                    inData = fi.readlines() if input("Table(t)?: ") == 't' else fi.read()
-            all_ins.append(inData)
+        inpts = inData + inType
+        if 'b' in inpts:
+            return getInputs(all_ins)
+        for inpt in (inType, inData):
+            if inpt.count('d') == len(inpt):
+                for n in range(len(inpt)):
+                    del all_ins[-1]
+                return getInputs(all_ins, inType, "\ndeleted {} dataset{}".
+                          format(len(inpt), '' if len(inpt) == 1 else 's'))
+        if inType in {'f', 'fa'}:
+            with open(inData, 'r', encoding='utf8') as fi:
+                inData = fi.readlines() if input("Table(t)?: ") == 't' else fi.read()
+        all_ins.append(inData)
     if len(all_ins) == 0:
         process = getInputs() if input("No data, RE?: ").lower() == "y" else sys.exit()
     return all_ins
