@@ -1,10 +1,11 @@
 
+
 import sys
 from itertools import permutations
 
 
 def getInputs(all_data=None, dataType=None, msg=''):
-    inType, inData = dataType, None
+    inType, inData = dataType, ''
     all_ins = [] if not all_data else all_data
     print("\n\n{} \nb = step back \nd*N = delete \npress ENTER to cancel".format(msg))
     while True:
@@ -12,13 +13,13 @@ def getInputs(all_data=None, dataType=None, msg=''):
             inType = input('\n'+"INPUT"+'\n'+"manually(m/all=ma)"+'\n'+"    file(f/all=fa): ")
             if len(inType) == 0:
                 break
-            if inType not in "mmaffabd":
+            if inType not in {'m', 'ma', 'f', 'fa', 'b', 'd'}:
                 return getInputs(all_ins)
-        inData = input("Paste dataset: ") if inType in {'m', 'ma'} else input("Fname: ")
-        if len(inData) == 0:
-            break
-        inpts = inData + inType
-        if 'b' in inpts:
+        if 'd' not in inType:
+            inData = input("Paste dataset: ") if inType in {'m', 'ma'} else input("Fname: ")
+            if len(inData) == 0:
+                break
+        if 'b' in inData + inType:
             return getInputs(all_ins)
         for inpt in (inType, inData):
             if inpt.count('d') == len(inpt):
