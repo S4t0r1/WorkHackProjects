@@ -10,8 +10,9 @@ def getCommandSet(s, char, p=False):
 commandsSet = getCommandSet("mftd", 'a')
 
 def anySetter(*conditions, seq=None):
-    return any(len(txt) == conditions[0] if len(conditions) == 1 
-          else len(txt) in {txt.count(ch) for ch in conditions[1]} for txt in seq)
+    return any((len(txt) == conditions[0] if type(conditions[0]) == int 
+           else len(txt) == txt.count(conditions[0])) if len(conditions) == 1 
+           else len(txt) in {txt.count(ch) for ch in conditions[1]} for txt in seq)
 
 def inputChecker(msg):
     allcommandsSet = commandsSet
@@ -46,7 +47,6 @@ def getInputs(all_data=None, inType=None, table=None, inData=None, msg=''):
         if inType in {'f', 'fa'}:
             with open(inData, 'r', encoding='utf8') as fi:
                 inData = fi.readlines() if input("Table(t)?: ") == 't' else fi.read()
-    
     if len(all_ins) == 0 or any(len(d)==d.count('e') for d in avalSettings if len(d)>0):
         process = getInputs(all_ins) if input("No data, exit?: " if avalSettings[-1] != 'e' 
                                          else "Exit?: ").lower() != "y" else sys.exit()
