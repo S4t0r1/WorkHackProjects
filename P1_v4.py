@@ -1,7 +1,8 @@
 import sys
 
-class BadInputError(Exception): pass
 
+
+class BadInputError(Exception): pass
 class Tools():
     def inpt_node_args(self):
         return {k: None for k in "inType;table;inData;lastIn"}
@@ -33,7 +34,6 @@ class InputNode(Tools):
     def __init__(self):
         inpt_specs = Tools.inpt_node_args(self)
         self.__dict__.update({k: None for k in inpt_specs})
-        print(self.__dict__.items)
 
     def inType(self):
         return self.inType
@@ -43,29 +43,15 @@ class InputNode(Tools):
     
     def inData(self):
         return self.inData
-    
+
     def lastIn(self):
         return self.lastIn
 
-class Data():   
-    def __init__(self, tools, name=None):
-        self.commands = tools.getCommandSet("mftda", 'a')
-        self.all_data = []
-        self.count = 0
-        self.name = name
-    
-    def data(self):
-        print("{}\n{}".format(self.all_data, self.name))
-        return self.all_data
-    
-    def addData(self, add):
-        self.all_data.append(add)
-        print(self.all_data)
-        return self.all_data
 
-class InputOps(Data, InputNode):   
+class InputOps(InputNode, Tools):   
     def __init__(self, tools, data):
-        Data.__init__(self, tools)
+        tools.__init__()
+        InputNode.__init__(self)
         self.tools = tools
         self.data = data
     
@@ -76,6 +62,7 @@ class InputOps(Data, InputNode):
             self.inType = tools.inputChecker(msg=msg, seq=tools.getCommandSet("mf", 'a'))
         else:
             self.inType = 'ma'
+        self.lastIn = self.inType
         return self.inType
     
     def getTable(self):
@@ -85,30 +72,18 @@ class InputOps(Data, InputNode):
             self.table = tools.inputChecker(msg=msg, seq=tools.getCommandSet("tn", 'a'))
         else:
             self.table = 'ta'
+        self.lastIn = self.table
         return self.table
     
     def getInData(self):
         tools = self.tools
         msg = "Paste Dataset: " if self.inType in tools.getCommandSet("m", 'a') else "Filename: "
         self.inData = tools.inputChecker(msg=msg)
+        self.lastIn = self.inData
         return self.inData
-
-    def addNew(self, datalst):
-        tools = self.tools
-        if not tools.anySetter(0, "de", seq=[self.inData]):
-            self.inData = self.file_mngr()
-            datalst.append(self.inData)
-            self.all_data = Data.addData(self, self.inData)
-
-            print("\n{}\ndatasets count = {}\n".format(self.all_data, len(self.all_data)))
-            self.lastIn = self.inData
-            self.count += 1
-        else:
-            print(self.all_data)
-            return 1
     
-    def file_mngr(self, filename=None):
-        tools = self.tools
+    def file_mngr(self, datalist=None, filename=None):
+        tools, count = self.tools, len(datalist)
         if any(self.table == c for c in tools.getCommandSet('t', 'a')):
             try:
                 filename = self.inData if not filename else filename
@@ -116,14 +91,48 @@ class InputOps(Data, InputNode):
                     self.inData = (fi.readlines() if self.table in tools.getCommandSet('t', 'a') 
                                    else fi.read())
             except FileNotFoundError:
-                filename = "g_file"+str(self.count+1)+".txt"
+                filename = "g_file"+str(count+1)+".txt"
                 with open(filename, 'w', encoding='utf8') as fi:
                     fi = fi.write(self.inData)
             else:   
                 return self.inData
         return self.inData 
-
+    
+    def addNew(self, datalst=None):
+        tools = self.tools
+        self.inData = self.getInData()
+        if not tools.anySetter(0, "de", seq=[self.inData]):
+            self.inData = self.file_mngr(datalist=datalst)
+            self.all_data = Data(tools).addData(self.inData)
+            self.lastIn = self.inData
+            return self.inData
+        else:
+            print(self.all_data)
+            return 1
+    
     def del_all(self):
+        return True if self.lastIn == 'da' else False
+
+class Data(InputOps):   
+    def __init__(self, tools, name=None):
+        tools.__init__(), InputNode().__init__()
+        self.tools = tools
+        self.commands = tools.getCommandSet("mftda", 'a')
+        self.all_data = []
+        self.count = 0
+        self.name = name
+    
+    def allData(self):
+        print("{}\n{}".format(self.all_data, self.name))
+        return self.all_data
+    
+    def addData(self, add):
+        self.all_data.append(add)
+        self.count = len(self.all_data)
+        print("\n{}\ndatapackage{}= {}".format(self.all_data, 
+                              's' if self.count>1 else '', self.count))
+    
+    def del_allData(self):
         if self.inData == 'da':
             print("DELETED all ({}) inputs".format(len(self.all_data)))
             self.all_data.clear()
@@ -131,18 +140,11 @@ class InputOps(Data, InputNode):
 
 
 def gatherData():
-    all_data_lst = []
     d = Data(Tools())
     while True:
-        print(all_data_lst)
         x = InputOps(Tools(), InputNode())
         x.getInType()
         x.getTable()
         newData = x.getInData()
-        if x.del_all():
-            all_data_lst.clear() 
-        if newData != 1:
-            x.addNew(all_data_lst)
-            d.addData(newData)
-        else: break
+        d.addData(newData)
 gatherData()
