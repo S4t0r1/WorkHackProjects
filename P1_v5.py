@@ -88,41 +88,43 @@ class Data(InputNode):
     def print_allData(self):
         return "\n{}\n{}".format(self.name, self.all_data)         
     
-    def exitProcess(self, ext=None):
-        return ext
+    def back_startmenu(self, inpt):
+        self.actionsD[inpt] = InputNode.__init__(self), self.getInputs()
+        return self.actionsD[inpt]
     
-    def back_startmenu(self):
-        InputNode.__init__(self)
-        return self.getInputs()
+    def exit_adding(self, inpt):
+        self.actionsD[inpt] = "ext"
+        return "ext"
 
     def addData(self, newdata):
         self.all_data.append(newdata)
         print("\n{}\n{}\ndatapackage{} = {}".format(self.name, self.all_data, 
-                's' if len(self.all_data) > 1 else '', len(self.all_data)))
+                  's' if len(self.all_data) > 1 else '', len(self.all_data)))
     
-    def dellData(self, count):
-        self.actionsD['d'*count] = self.all_data[:-count]
-        self.all_data = self.actionsD['d'*count]
+    def dellData(self, inpt, count):
+        self.actionsD[inpt] = self.all_data[:-count]
+        self.all_data = self.actionsD[inpt]
         print("..deleted {} datablocks\n{}".format(count, self.print_allData()))
 
-    def del_allData(self):
-        print("..deleted all inputs({})\n{}".format(len(self.all_data), self.print_allData()))
-        self.actionsD['da'] = self.all_data.clear()
+    def del_allData(self, inpt, count):
+        self.actionsD[inpt] = self.all_data.clear()
+        print("..deleted all inputs({})\n{}".format(count, self.print_allData()))
     
     def getOperation(self, inpt, count):
-        return (self.back_startmenu() if 'b' in inpt
-          else self.del_allData() if 'da' == inpt
-          else self.dellData(count) if 'd' in inpt
-          else self.exitProcess(ext=True))
+        return (self.back_startmenu(inpt) if 'b' in inpt
+           else self.del_allData(inpt, count) if 'da' == inpt
+           else self.dellData(inpt, count) if 'd' in inpt
+           else self.exit_adding(inpt))
 
     def getInputs(self):
-        exit_datarealm = self.exitProcess(ext=None)
+        exit_datarealm = None
         while not exit_datarealm:
+            print(self.actionsD)
             for inpt in (self.getInType(), self.getTable(), self.getInData(self.count)):
                 if type(inpt) == tuple:
                     inpt, count = inpt
                     operation = self.getOperation(inpt, count)
-                    exit_datarealm = operation if operation == True else exit_datarealm
+                    exit_datarealm = operation if operation == 'ext' else exit_datarealm
                     self.actionsD.get(inpt, operation)
                     break
             else:
