@@ -92,7 +92,7 @@ class Data(InputNode):
         return ext
     
     def back_startmenu(self):
-        InputNode().__init__()
+        InputNode.__init__(self)
         return self.getInputs()
 
     def addData(self, newdata):
@@ -106,7 +106,7 @@ class Data(InputNode):
         print("..deleted {} datablocks\n{}".format(count, self.print_allData()))
 
     def del_allData(self):
-        print("DELETED all ({}) inputs\n{}".format(len(self.all_data), self.print_allData()))
+        print("..deleted all inputs({})\n{}".format(len(self.all_data), self.print_allData()))
         self.actionsD['da'] = self.all_data.clear()
     
     def getOperation(self, inpt, count):
