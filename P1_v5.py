@@ -23,9 +23,9 @@ class Tools():
 
     def inputChecker(self, msg, seq=None, filtr=None):
         inpt = input(msg)
-        forbidden_or_allowed = {c for c in "bde"}
-        if not seq:
-            return inpt
+        forbidden_or_allowed = {c for c in "bde"} | {'da'}
+        if not seq and inpt in forbidden_or_allowed:
+            return inpt, len(inpt)
         seq = seq | forbidden_or_allowed
         if inpt not in list(seq):
             print("\nERROR: Bad Input!")
@@ -72,8 +72,9 @@ class InputOps(InputNode, Tools):
         tools = self.tools
         msg = ("Paste Dataset: " if self.inType in tools.getCommandSet("m", 'a') 
                else "Filename: ")
-        self.inData = tools.inputChecker(msg=msg, filtr=True)
-        self.inData = self.file_mngr(count=cnum)
+        tempData = tools.inputChecker(msg=msg, filtr=True)
+        if len(list(tempData)) == 1:  
+            self.inData = self.file_mngr(count=cnum)
         return self.inData
     
     def file_mngr(self, count=None, filename=None):
@@ -99,37 +100,53 @@ class Data(InputOps):
         self.tools = tools
         self.commands = tools.getCommandSet("mftda", 'a')
         self.all_data = []
-        self.actionsD = {c: None for c in "b;d;e;da".split(';')}
+        self.actionsD = {}
         self.count = 0
         self.name = name
     
-    def getInputs(self):
-        for inpt in (self.getInType(), self.getTable(), self.getInData()):
-            
-            if (tools.anySetter("bde", seq=[inpt])) and inpt == "da":
-                
-                        
-
     def allData(self):
         print("{}\n{}".format(self.all_data, self.name))
         return self.all_data
+
+    def getInputs(self):
+        exit = self.exitProcess(ext=None)
+        while not exit:
+            for inpt in (self.getInType(), self.getTable(), self.getInData(self.count)):
+                if type(inpt) == tuple:
+                    inpt, count = inpt
+                    operation = self.getOperation(inpt, count)
+                    exit = operation if operation == True else exit
+                    return self.actionsD.get(inpt, operation)
+            return inpt
+
+    def getOperation(self, inpt, count):
+        return (self.back_startmenu() if 'b' in inpt
+          else self.del_allData() if inpt == 'da'
+          else self.dellData(count) if 'd' in inpt
+          else self.exitProcess(ext=True))             
     
+    def exitProcess(self, ext=None):
+        return exit
+    
+    def back_startmenu(self):
+        InputNode().__init__()
+        return self.getInputs()
+
     def addData(self, newdata):
         if type(newdata) == str:
-            actionsD['add'] = self.all_data.append(newdata)
+            self.actionsD['add'] = self.all_data.append(newdata)
             self.count = len(self.all_data)
             print("\n{}\ndatapackage{}= {}".format(self.all_data, 
                                     's' if self.count>1 else '', self.count))
-            return self.all_data
     
     def dellData(self, count):
-        actionsD['d'*count] = self.all_data[:-count]
-        self.all_data = actionsD['d'*count]
+        self.actionsD['d'*count] = self.all_data[:-count]
+        self.all_data = self.actionsD['d'*count]
         print("..deleted {} datablocks".format(count))
 
     def del_allData(self):
         print("DELETED all ({}) inputs".format(len(self.all_data)))
-        actionsD['da'] = self.all_data.clear()
+        self.actionsD['da'] = self.all_data.clear()
 
 
 def gatherData(datarealm=None):         
