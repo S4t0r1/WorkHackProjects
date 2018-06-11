@@ -33,7 +33,7 @@ class Tools():
                 return self.inputChecker(msg, seq, filtr)               
         return inpt
     
-    def getCmndSeqs(self, seq, slen=None):
+    def getCmndSeqs(self, seq):
         assert ';' in seq, "divide inpt_cmnds & data_cmnds by ';'"
         seq = seq.split(';')
         i_cmnds, d_cmnds = seq
@@ -52,7 +52,7 @@ class InputNode(Tools):
         self.table = table
         self.inData = inData
     
-    def getInputOp(self, x, dnum, off=True):
+    def getInputOp(self, x, dnum, off=False):
         return (self.getInType(off) if x == 0 
           else self.getTable(off) if x == 1 
           else self.getInData(off, data_pos=dnum))
@@ -65,41 +65,47 @@ class InputNode(Tools):
                 if inptvar not in condition:
                     inptvar = self.inputChecker(msg, inpt_cmnds, data_cmnds)
                 return inptvar
-            elif type(condition) == tuple:
+            elif condition == tuple:
                 inptvar = self.inputChecker(msg, None, data_cmnds)
                 if type(inptvar) != condition:
-                    inptvar = self.file_mngr(dnum=data_pos)
-            return inptvar
+                    print('foo2')
+                    inptvar = self.file_mngr(inptvar, dnum=data_pos)
+                return inptvar
     
     def getInType(self, off):
-        msg = "'\n'INPUT'\n'manually(m/all=ma)'\n'    file(f/all=fa): "
+        inpt_cmnds, condition = self.i_cmndset, self.getCommandSet("mf", 'a', p=True)
+        msg = "\nINPUT\nmanually(m/all=ma)\n    file(f/all=fa): "
         return self.getInput(msg, self.inType, self.d_cmndset, off,
-            inpt_cmnds=self.i_cmndset, condition=self.getCommandSet("m", 'a'))
+            inpt_cmnds=inpt_cmnds, condition=condition, data_pos=None)
 
     def getTable(self, off):
-        return self.getInput("Table?(t, ta): ", self.table, self.d_cmndset, off,
-            inpt_cmnds=self.i_cmndset, condition=self.getCommandSet("tn", 'a'))
+        inpt_cmnds, condition = self.i_cmndset, self.getCommandSet("tn", 'a', p=True)
+        return self.getInput("Table?(t, ta): ", self.table, self.d_cmndset, off, 
+                      inpt_cmnds=inpt_cmnds, condition=condition, data_pos=None)
     
-    def getInData(self, off, data_pos=None, prev_cmnds=self.getCommandSet("m", 'a')):
+    def getInData(self, off, data_pos=None):
+        print("foo")
+        prev_cmnds = self.getCommandSet("m", 'a')
+        inpt_cmnds, condition = None, tuple
         msg = ("Paste Dataset: " if self.inType in prev_cmnds else "Filename: ")        
-        self.inData = self.getInput(msg, self.inData, self.d_cmndset, off,  
-                              inpt_cmnds=self.i_cmndset, condition=tuple)
+        self.inData = self.getInput(msg, self.inData, self.d_cmndset, off, 
+            inpt_cmnds=inpt_cmnds, condition=condition, data_pos=data_pos)
         return self.inData
     
-    def file_mngr(self, dnum=None, filename=None):
+    def file_mngr(self, indata, dnum=None, filename=None):
         if any(self.table == c for c in self.getCommandSet('tf', 'a')):
             try:
-                filename = self.inData if not filename else filename
+                filename = indata if not filename else filename
                 with open(filename, 'r', encoding='utf8') as fi:
-                    self.inData = (fi.readlines() if self.table in self.getCommandSet('t', 'a') 
+                    indata = (fi.readlines() if self.table in self.getCommandSet('t', 'a') 
                                    else fi.read())
             except (FileNotFoundError, OSError):
                 filename = "g_file" + str(dnum + 1 )+ ".txt"
                 with open(filename, 'w', encoding='utf8') as fi:
                     fi = fi.write(self.inData)
             else:   
-                return self.inData
-        return self.inData 
+                return indata
+        return indata 
 
 
 class Data(InputNode, Tools):   
@@ -135,7 +141,7 @@ class Data(InputNode, Tools):
         print("\n..deleted {} datablocks\n{}".format(slen, self.print_allData()))
 
     def del_allData(self):
-        print("\n..deleted all inputs({})\n{}".format(self.count, self.print_allData()))
+        print("\n..deleted all inputs({})\n{}".format(len(self.all_data), self.print_allData()))
         self.all_data.clear()
     
     def getDataOp(self, inpt, slen):
