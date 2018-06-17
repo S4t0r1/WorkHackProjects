@@ -5,6 +5,9 @@ import sys
 class BadInputError(Exception): pass
 
 class Tools():  
+    def __init__(self):
+        self.transf_vars = []
+    
     def getCommandSet(self, seq1=None, char=None, p=False):
         return set(';'.join(c1+c2 if p else ';'.join((c1, c1+c2)) 
                    for c1, c2 in zip(seq1, char*len(seq1))).split(';'))
@@ -44,10 +47,7 @@ class Tools():
                 return self.inputChecker(msg, seq, filtr)               
         return inpt
     
-    def getCmndSeqs(self, seq):
-        assert ';' in seq, "divide inpt_cmnds & data_cmnds by ';'"
-        seq = seq.split(';')
-        i_cmnds, d_cmnds = seq
+    def getCmndSeqs(self, i_cmnds, d_cmnds):
         i_cmnds = self.getCommandSet(i_cmnds, 'a')
         d_cmnds = self.getCommandSet(d_cmnds, 'a') - {'ea'}
         a_cmnds = i_cmnds | d_cmnds
@@ -56,12 +56,13 @@ class Tools():
 
 
 class InputNode(Tools):
-    def __init__(self, inType=None, table=None, inData=None, seq=None, off=False):
+    def __init__(self, seq=None, off=False):
         Tools.__init__(self)
-        self.a_cmndset, self.i_cmndset, self.d_cmndset = self.getCmndSeqs(seq)     
-        self.inType = inType
-        self.table = table
-        self.inData = inData
+        self.seq = seq
+        self.a_cmndset, self.i_cmndset, self.d_cmndset = self.getCmndSeqs(*seq) 
+        self.inType = None
+        self.table = None
+        self.inData = None
     
     def getInputOp(self, x, dnum, off=False):
         return (self.getInType(off) if x == 0 
@@ -77,7 +78,7 @@ class InputNode(Tools):
                     inptvar = self.inputChecker(msg, inpt_cmnds, filtr=data_cmnds)
                 return inptvar
             elif condition == tuple:
-                inptvar = self.inputChecker(msg, None, data_cmnds)
+                inptvar = self.inputChecker(msg, None, filtr=data_cmnds)
                 if type(inptvar) != condition:
                     inptvar = self.file_mngr(inptvar, dnum=data_pos)
                 return inptvar
@@ -120,12 +121,12 @@ class InputNode(Tools):
 
 
 class Data(InputNode, Tools):   
-    def __init__(self, seq=None, name=None):
+    def __init__(self, *seq, name=None):
         Tools.__init__(self)
-        InputNode.__init__(self, seq=seq)
         self.seq = seq
         self.name = name
-        self.a_cmnds, self.i_cmnds, self.d_cmnds = self.getCmndSeqs(seq)
+        self.a_cmnds, self.i_cmnds, self.d_cmnds = self.getCmndSeqs(*seq)
+        InputNode.__init__(self, seq=seq)
         self.datadict = {}
         self.all_data = list(self.datadict.values())
         self.count = len(self.all_data)
@@ -180,5 +181,5 @@ class Data(InputNode, Tools):
         return self.all_data
 
     
-d = Data(seq="mftn;bde", name="TEST 99999")
+d = Data("mftn", "bde", name="TEST 99999")
 datarealm = d.getInputs()
