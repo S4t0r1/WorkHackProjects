@@ -8,24 +8,20 @@ class Nodebase:
         self.all_data = {}
     
     def getFile(fname):
-        
+        strdata = ''
         with open(fname, 'r', encoding='utf-8') as fi:
-            datitem = fi.read()
-        
-    
-    def getNode(datitem, mode='s', name=None):
-        if mode == 's':
-            continue
-        elif mode == 'f':
-            fname, ftype = datitem.split('.')
-            with open(fname, 'r', encoding='utf-8') as fi:
-                datitem = fi.read()
-        elif mode == 'u':
-            
+            strdata = fi.read()
+        return strdata
 
-    def getNodes(self, data):
-        for datitem in [data]:
-            pass
+    def getNode(datitem, mode='s', name=None):
+        if mode == 's' and not name:
+            name = len(self.all_data.keys())
+        elif mode == 'f':
+            fname, mode = datitem.split('.')
+            datitem = self.getFile(fname)
+            if not name:
+                name = fname
+        return datitem, mode, name
             
 
 def setNode():
